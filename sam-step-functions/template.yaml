@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-step-functions
+
+  Sample SAM Template for sam-step-functions
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 60
+
+Resources:
+  ## Define a API /credenciadora/conjuntos-unidades-recebiveis
+  ## Essa API irá chamar a "aplicação" - uma lambda que irá iniciar a StepFunctionsStateMachine
+  ConjuntoRecebiveisFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image
+      Events:
+        RegistraContrato:
+          Type: Api 
+          Properties:
+            Path: /credenciadora/conjuntos-unidades-recebiveis
+            Method: post
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./hello-world
+      Dockerfile: Dockerfile
+
+## Definição da máquina de estado que fará a implementação do padrão SAGA
+## o descritor da máquina está no arquivo ASL.JSON
+## ajustar políticas para um ambiente de produção - SOMENTE USAR EM TESTES / EXEMPLO
+  SAGAStateMachine: 
+    Type: AWS::Serverless::StateMachine
+    Properties: 
+      Name: AtlanteSAGA
+      DefinitionUri: statemachine/atlante_exemplo.asl.json
+      Tracing: 
+        Enabled: true 
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSLambdaBasicExecutionRole
+        - AmazonS3FullAccess
+
+## Tabela de controle do estado de cada processamento
+## ajudará na parte de controle de reprocessar caso algo dê problema
+## investigar como fazer isso nativamente no Step Functions
+  AtlanteControlTable:
+    Type: AWS::Serveless::SimpleTable
+    Properties:
+      PrimaryKey: 
+        Name: UUID 
+        Type: String 
+      TableName: AtlanteControl 
+      SSESpecification:
+        SSEEnabled: Yes
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  URLdaApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  registraContratoFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  registraContratoFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn

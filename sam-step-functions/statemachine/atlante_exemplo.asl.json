@@ -1,0 +1,126 @@
+{ 
+    "Comment": "Maquina de Estado de exemplo do Atlante",
+    "StartAt": "AtualizaTabela",
+    "States": {
+        "AtualizaTabela": { 
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+                "TableName": "AtlanteControl",
+                "Key": { 
+                    "UUID": {
+                        "S": "$.uuid"
+                    }
+                },
+                "UpdateExpression": "SET Status = :status, ExecutionId = :executionId, StartTime = :startTime",
+                "ExpressionAttributeValues": {
+                    ":status": { "S": "CREATED" },
+                    ":executionId": { "S.$": "$$.Execution.Id" },
+                    ":startTime": { "S.$": "$$.Execution.StartTime" }
+                }
+            },
+            "Next": "ConsultaTabela"
+        } ,
+        "ConsultaTabela": { 
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:getItem",
+            "Parameters": {
+                "TableName": "AtlanteControl",
+                "Key": {
+                    "UUID": {
+                        "S.$": "$.uuid"
+                    }
+                }
+            },
+            "Next": "EscolhaCaminho"
+        },
+        "EscolhaCaminho": { 
+            "Type" : "Choice",
+            "Choices": [
+            {
+                "Variable": "$.Item.Status.S",
+                "StringEquals": "CREATED",
+                "Next": "ValidaArquivo"
+            },
+            {
+                "And": [
+                    { 
+                        "Variable": "$.Item.Status.S",
+                        "StringEquals": "PENDING_PROCESSING"
+                    },
+                    {
+                        "Variable": "$.Item.Status.S",
+                        "IsString": true
+                    }
+                ],
+                "Next": "ProcessaArquivo"
+            },
+            {
+                "Variable": "$.Item.Status.S",
+                "StringEquals": "PROCESSED",
+                "Next": "ValidaFinal"
+            }
+            ],
+            "Default": "ValidaArquivo"
+        },
+        "ModificaStatus": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+                "TableName": "AtlanteControl",
+                "Key": {
+                    "UUID": { 
+                        "S": "$.uuid"
+                    }
+                },
+                "UpdateExpression": "SET Status = :status",
+                "ExpressionAttributeValues": {
+                    ":status": { "S": "$.Status" }
+                }
+            },
+            "Next": "ConsultaTabela"
+        },
+        "ValidaArquivo": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters": { 
+                "FunctionName": "validaArquivo",
+                "TaskToken.$": "$$.Task.Token",
+                "Status": "PENDING_PROCESSING"
+            },
+            "Next": "ModificaStatus"
+        },
+        "ProcessaArquivo": { 
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:us-east-1:441224055073:function:processaArquivo",
+            "Parameters": {
+                "Status": "PROCESSED"
+            },
+            "Next": "ModificaStatus"
+        },
+        "ValidaFinal": {
+            "Type": "Choice",
+            "Choices": [
+            {
+                "Variable": "$.value",
+                "NumericEquals": 200,
+                "Next": "Sucesso"
+            },
+            { 
+                "Not": {
+                    "Variable": "$.value",
+                    "NumericEquals": 200
+                },
+                "Next": "Falha"
+            }
+            ],
+            "Default": "Falha"
+        },
+        "Sucesso": {
+            "Type": "Succeed"
+        },
+        "Falha": { 
+            "Type": "Fail"
+        }
+    }
+}
