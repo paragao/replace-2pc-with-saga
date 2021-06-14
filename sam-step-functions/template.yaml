@@ -28,6 +28,51 @@ Resources:
       DockerContext: ./hello-world
       Dockerfile: Dockerfile
 
+  LotesRecebiveisFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image
+      Events:
+        RegistraContrato:
+          Type: Api 
+          Properties:
+            Path: /credenciadora/conjuntos-unidades-recebiveis/{id_conjunto}/lotes-unidades-recebiveis
+            Method: post
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./hello-world
+      Dockerfile: Dockerfile
+
+  OperacoesFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image
+      Events:
+        RegistraContrato:
+          Type: Api 
+          Properties:
+            Path: /credenciadora/operacoes
+            Method: post
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./hello-world
+      Dockerfile: Dockerfile
+
+  RetornosRegistroOperacaoFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image
+      Events:
+        RegistraContrato:
+          Type: Api 
+          Properties:
+            Path: /credenciadora/retornos-registro-operacao
+            Method: post
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./hello-world
+      Dockerfile: Dockerfile
+
 ## Definição da máquina de estado que fará a implementação do padrão SAGA
 ## o descritor da máquina está no arquivo ASL.JSON
 ## ajustar políticas para um ambiente de produção - SOMENTE USAR EM TESTES / EXEMPLO

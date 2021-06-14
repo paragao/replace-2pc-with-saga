@@ -1,0 +1,407 @@
+{ 
+    "Comment": "State Machine baseado no desenho enviado pelo Kuriki em 09-06-2021",
+    "StartAt": "RegistroOperacao",
+    "States": {
+        "RegistroOperacao": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::apigateway:invoke",
+            "Parameters": {
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "POST",
+                "Path": "/teste/registro-operacao",
+                "AuthType": "NO_AUTH"
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 2,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "ResultPath": "$.taskresult",
+            "Next": "ValidaSolicitacao"
+        },
+        "ValidaSolicitacao": { 
+            "Type": "Choice",
+            "Comment": "Solicitação Válida?",
+            "Choices": [
+                { 
+                    "Variable": "$.taskresult.ResponseBody.sucessoRegistro",
+                    "StringEquals": "true",
+                    "Next": "BloqueiaEC"
+                },
+                { 
+                    "Variable": "$.taskresult.ResponseBody.sucessoRegistro",
+                    "StringEquals": "false",
+                    "Next": "GeraResposta"
+                }
+            ],
+            "Default": "GeraResposta"
+        },
+        "GeraResposta": { 
+            "Type": "Task",
+            "Comment": "chama um microserviço para finalizar o registro da operação",
+            "Resource": "arn:aws:states:::apigateway:invoke",
+            "Parameters": {
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "POST",
+                "Path": "/teste/gera-resposta",
+                "AuthType": "NO_AUTH"
+            },
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "Sucesso"
+        },
+        "BloqueiaEC": { 
+            "Type": "Task",
+            "Comment": "Bloqueia estabelecimento comercial",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+                "TableName": "r2c3",
+                "Item": { 
+                    "ispb": {
+                        "S": "$.ispb"
+                    },
+                    "BloqueiaEC": {
+                        "S": "$.input.taskresult.ResponseBody.sucessoRegistro"
+                    }
+                }
+            },
+            "HeartbeatSeconds": 10,
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "ValidaRegistroEC"
+        },
+        "ValidaRegistroEC": { 
+            "Type": "Choice",
+            "Choices": [
+                { 
+                    "Variable": "$",
+                    "IsNull": false,
+                    "Next": "ValidaAnuencias"
+                }
+            ],
+            "Default": "EfetivaOperacao"
+        },
+        "ValidaAnuencias": { 
+            "Type": "Task",
+            "Comment": "Existem anuencias?",
+            "Resource": "arn:aws:states:::apigateway:invoke",
+            "Parameters": {
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "GET",
+                "Path": "/teste/valida-anuencia",
+                "QueryParameters": { 
+                    "ispb": ["012345"]
+                },
+                "AuthType": "NO_AUTH"
+            },
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "EnviaAnuenciasBaseCentralizada"
+        },
+        "EnviaAnuenciasBaseCentralizada": { 
+            "Type": "Task",
+            "Comment": "Envia Anuencias para Base Centralizada",
+            "Resource": "arn:aws:states:::apigateway:invoke",
+            "Parameters": {
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "GET",
+                "Path": "/teste/envia-anuencia",
+                "QueryParameters": { 
+                    "anuencia": ["anuencia enviada a base centralizada"]
+                },
+                "AuthType": "NO_AUTH"
+            },
+            "Next": "InsereAnuencias",
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ]
+        },
+        "InsereAnuencias": { 
+            "Type": "Task",
+            "Comment": "Insere anuencias na base centralizada",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+                "TableName": "r2c3",
+                "Item": {
+                    "ispb": { 
+                        "S": "012345"
+                    },
+                    "IdAnuencia": { 
+                        "S": "anuencia inserida"
+                    }
+                }
+            },
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "PreparaEnviaAgendas"
+        },
+        "PreparaEnviaAgendas": { 
+            "Type": "Task",
+            "Comment": "Prepara e envia agendas bilaterais - INTP010",
+            "Resource": "arn:aws:states:::ecs:runTask.sync",
+            "Parameters": {
+                "Cluster": "arn:aws:ecs:us-east-1:441224055073:cluster/r2c3",
+                "TaskDefinition": "r2c3:2"
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "RegistraAgendas"
+        },
+        "RegistraAgendas": {
+            "Type": "Task",
+            "Comment": "Registra agendas  - outras registradoras",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+                "TableName": "r2c3",
+                "Item": { 
+                    "ispb": {
+                        "S": "012345"
+                    },
+                    "Agenda": { 
+                        "S": "agenda registrada"
+                    }
+                }    
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "AgendasRegistradas"
+        },
+        "AgendasRegistradas": { 
+            "Type": "Wait",
+            "Seconds": 30,
+            "Comment": "Aguarda registro de agendas",
+            "Next": "ValidaAgendaRegistrada"
+        },
+        "ValidaAgendaRegistrada": { 
+            "Type": "Choice",
+            "Comment": "SLA Atendido?",
+            "Choices": [
+                { 
+                    "Variable": "$.sucesso",
+                    "StringEquals": "true",
+                    "Next": "EfetivaOperacao"
+                },
+                { 
+                    "Variable": "$.sucesso",
+                    "StringEquals": "false",
+                    "Next": "NotificaCancelamentoOperacao"
+                }
+            ]
+        },
+        "EfetivaOperacao": { 
+            "Type": "Task",
+            "Comment": "Efetiva operacao",
+            "Resource": "arn:aws:states:::apigateway:invoke",
+            "Parameters": {
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "POST",
+                "Path": "/teste/efetiva-operacao",
+                "AuthType": "NO_AUTH"
+            },
+            "Next": "DesbloqueiaEC"
+        },
+        "NotificaCancelamentoOperacao": { 
+            "Type": "Task",
+            "Comment": "INTP013",
+            "Resource": "arn:aws:states:::sns:publish",
+            "Parameters": {
+                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "Message.$": "$"
+            },
+            "Next": "CancelaOperacao"
+        },
+        "CancelaOperacao": { 
+            "Type": "Task",
+            "Comment": "Cancela operacao - outras registradoras",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+                "TableName": "r2c3",
+                "Key": { 
+                    "ispb": { 
+                        "S": "012345"
+                    }
+                },
+                "UpdateExpression": "SET RegistroOperacao = :status",
+                "ExpressionAttributeValues": { 
+                    ":status": { "S": "CANCELADA" }
+                }
+            },
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "EnviaCancelamentoOptin"
+        },
+        "EnviaCancelamentoOptin": { 
+            "Type": "Task",
+            "Comment": "Envia cancelamento de Opt-In",
+            "Resource": "arn:aws:states:::sns:publish",
+            "Parameters": { 
+                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "Message.$": "$"
+            },
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "CancelaOptin"
+        },
+        "CancelaOptin": { 
+            "Type": "Task",
+            "Comment": "Cancela Opt-In - base centralizada",
+            "Resource": "arn:aws:states:::sns:publish",
+            "Parameters": {
+                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "Message": "Cancela Opt-In - output de CancelaOptin"
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "OptinCancelado"
+        },
+        "OptinCancelado": {
+            "Type": "Task",
+            "Comment": "avisa sobre cancelamento do Opt-In",
+            "Resource": "arn:aws:states:::sns:publish",
+            "Parameters": {
+                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "Message": "Opt-In cancelado - output de OptinCancelado"
+            },
+            "Next": "DesbloqueiaEC"
+        },
+        "DesbloqueiaEC": { 
+            "Type": "Task",
+            "Comment": "Desbloqueia Estabelecimento Comercial",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+                "TableName": "r2c3",
+                "Key": { 
+                    "ispb": { 
+                        "S": "012345"
+                    }
+                },
+                "UpdateExpression": "SET BloqueiaEC = :status",
+                "ExpressionAttributeValues": { 
+                    ":status": { "S": "DESBLOQUEADO" }
+                }
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "EstimulaRecalculo"
+        },
+        "EstimulaRecalculo": {
+            "Type": "Task",
+            "Comment": "Estimula recalculo",
+            "Resource": "arn:aws:states:::sns:publish",
+            "Parameters": {
+                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "Message": "Estimulando recalculo - output de EstimulaRecalculo"
+            },
+            "Retry": [
+                { 
+                    "ErrorEquals": [ "States.TaskFailed" ],
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Falha"
+                }
+            ],
+            "Next": "GeraResposta"
+        },
+        "Sucesso": {
+            "Type": "Succeed",
+            "Comment": "Saída com OK para fim de fluxo"
+        },
+        "Falha": { 
+            "Type": "Fail",
+            "Error": "Um dos estados falhou. $.Error : $.Cause",
+            "Comment": "Saída com erro. O output do erro é customizado via campo ERROR"
+        }
+    }
+
+}

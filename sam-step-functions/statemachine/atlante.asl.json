@@ -19,8 +19,22 @@
                     ":startTime": { "S.$": "$$.Execution.StartTime" }
                 }
             },
+            "Retry" : [
+                {
+                    "ErrorEquals": [ "States.Timeout" ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 2,
+                    "BackoffRate": 2
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "CancelAtualizaTabela"
+                }
+            ],
             "Next": "ConsultaTabela"
-        } ,
+        },
         "ConsultaTabela": { 
             "Type": "Task",
             "Resource": "arn:aws:states:::dynamodb:getItem",
@@ -32,8 +46,22 @@
                     }
                 }
             },
+            "Retry" : [
+                {
+                    "ErrorEquals": [ "States.Timeout" ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 2,
+                    "BackoffRate": 2
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "CancelAtualizaTabela"
+                }
+            ],
             "Next": "EscolhaCaminho"
-        },
+        },        
         "EscolhaCaminho": { 
             "Type" : "Choice",
             "Choices": [
@@ -78,6 +106,20 @@
                     ":status": { "S": "$.Status" }
                 }
             },
+            "Retry" : [
+                {
+                    "ErrorEquals": [ "States.Timeout" ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 2,
+                    "BackoffRate": 2
+                }
+            ],
+            "Catch": [
+                { 
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "CancelAtualizaTabela"
+                }
+            ],
             "Next": "ConsultaTabela"
         },
         "ValidaArquivo": {
@@ -121,6 +163,11 @@
         },
         "Falha": { 
             "Type": "Fail"
+        },        
+        "CancelAtualizaTabela": { 
+            "Type": "Fail",
+            "Comment": "Falhou atualizar a tabela de controle no inicio da execução",
+            "Error": "Failed update the control table. Aborting."
         }
     }
 }
