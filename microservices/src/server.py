@@ -2,6 +2,7 @@ from flask import Flask
 
 server = Flask(__name__)
 
+#microserviços
 @server.route("/teste")
 def base():
     return("chamada PREPARA ENVIA AGENDAS do microserviço")
