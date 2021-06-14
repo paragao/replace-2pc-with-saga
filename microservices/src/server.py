@@ -2,9 +2,9 @@ from flask import Flask
 
 server = Flask(__name__)
 
-@server.route("/")
+@server.route("/teste")
 def base():
-    return("chamada direta via ECS.RunTask")
+    return("chamada PREPARA ENVIA AGENDAS do microserviço")
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():

@@ -9,6 +9,7 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/registro-operacao",
+                "RequestBody": {},
                 "AuthType": "NO_AUTH"
             },
             "Retry": [
@@ -52,6 +53,7 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/gera-resposta",
+                "RequestBody": {},
                 "AuthType": "NO_AUTH"
             },
             "Catch": [
@@ -105,6 +107,7 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "GET",
                 "Path": "/teste/valida-anuencia",
+                "RequestBody": {},
                 "QueryParameters": { 
                     "ispb": ["012345"]
                 },
@@ -124,8 +127,9 @@
             "Resource": "arn:aws:states:::apigateway:invoke",
             "Parameters": {
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
-                "Method": "GET",
+                "Method": "POST",
                 "Path": "/teste/envia-anuencia",
+                "RequestBody": {},
                 "QueryParameters": { 
                     "anuencia": ["anuencia enviada a base centralizada"]
                 },
@@ -172,10 +176,14 @@
         "PreparaEnviaAgendas": { 
             "Type": "Task",
             "Comment": "Prepara e envia agendas bilaterais - INTP010",
-            "Resource": "arn:aws:states:::ecs:runTask.sync",
+            "Resource": "arn:aws:states:::apigateway:invoke.waitForTaskToken",
             "Parameters": {
-                "Cluster": "arn:aws:ecs:us-east-1:441224055073:cluster/r2c3",
-                "TaskDefinition": "r2c3:2"
+                "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
+                "Method": "GET",
+                "Path": "/teste",
+                "Headers": { 
+                    "TaskToken.$": "States.Array($$.Task.Token)"
+                }
             },
             "Retry": [
                 { 
@@ -252,6 +260,7 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/efetiva-operacao",
+                "RequestBody": {},
                 "AuthType": "NO_AUTH"
             },
             "Next": "DesbloqueiaEC"
