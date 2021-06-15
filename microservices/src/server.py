@@ -13,6 +13,9 @@ def root_path():
 def teste():
     try:
         event = request.json
+        print(event)
+        for item in event: 
+            print(event[item])
 
         if (True):
             sucesso = True

@@ -181,6 +181,9 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/prepara-agenda",
+                "Headers": { 
+                    "Content-Type": ["application/json"]
+                },
                 "RequestBody": { 
                     "TaskToken.$": "$$.Task.Token"
                 }
