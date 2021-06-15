@@ -3,8 +3,12 @@ from flask import Flask
 server = Flask(__name__)
 
 #microserviços
+@server.route("/")
+def root_path():
+    return("ok")
+
 @server.route("/teste")
-def base():
+def teste():
     return("chamada PREPARA ENVIA AGENDAS do microserviço")
 
 @server.route("/teste/efetiva-operacao")
