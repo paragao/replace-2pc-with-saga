@@ -26,7 +26,7 @@ def teste():
     except: 
         print('error')
 
-    return jsonify(event['taskToken'], sucesso)
+    return jsonify(sucesso)
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():
