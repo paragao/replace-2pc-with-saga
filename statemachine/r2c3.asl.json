@@ -179,12 +179,14 @@
             "Resource": "arn:aws:states:::apigateway:invoke.waitForTaskToken",
             "Parameters": {
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
-                "Method": "GET",
+                "Method": "POST",
                 "Path": "/teste",
-                "Headers": { 
-                    "TaskToken.$": "States.Array($$.Task.Token)"
+                "RequestBody": { 
+                    "Message.$": "$",
+                    "TaskToken.$": "$$.Task.Token"
                 }
             },
+            "HeartbeatSeconds": 15,
             "Retry": [
                 { 
                     "ErrorEquals": [ "States.TaskFailed" ],
@@ -228,12 +230,14 @@
                     "Next": "Falha"
                 }
             ],
+            "ResultPath": "$.taskresult",
             "Next": "AgendasRegistradas"
         },
         "AgendasRegistradas": { 
             "Type": "Wait",
-            "Seconds": 30,
+            "Seconds": 10,
             "Comment": "Aguarda registro de agendas",
+            "ResultPath": "$.taskresult",
             "Next": "ValidaAgendaRegistrada"
         },
         "ValidaAgendaRegistrada": { 
@@ -241,13 +245,13 @@
             "Comment": "SLA Atendido?",
             "Choices": [
                 { 
-                    "Variable": "$.sucesso",
-                    "StringEquals": "true",
+                    "Variable": "$.taskResult.sucesso",
+                    "IsBoolean": true,
                     "Next": "EfetivaOperacao"
                 },
                 { 
-                    "Variable": "$.sucesso",
-                    "StringEquals": "false",
+                    "Variable": "$.taskResult.sucesso",
+                    "IsBoolean": false,
                     "Next": "NotificaCancelamentoOperacao"
                 }
             ]
