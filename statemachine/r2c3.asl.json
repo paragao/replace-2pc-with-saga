@@ -180,9 +180,8 @@
             "Parameters": {
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
-                "Path": "/teste",
-                "RequestBody": { 
-                    "Message.$": "$",
+                "Path": "/teste/prepara-agenda",
+                "QueryParameters": { 
                     "TaskToken.$": "$$.Task.Token"
                 }
             },
@@ -200,6 +199,7 @@
                     "Next": "Falha"
                 }
             ],
+            "ResultPath": "$.taskresult",
             "Next": "RegistraAgendas"
         },
         "RegistraAgendas": {
@@ -213,7 +213,7 @@
                         "S": "012345"
                     },
                     "Agenda": { 
-                        "S": "agenda registrada"
+                        "S.$": "$.TaskResult.ResponseBody.taskToken"
                     }
                 }    
             },
@@ -237,7 +237,6 @@
             "Type": "Wait",
             "Seconds": 10,
             "Comment": "Aguarda registro de agendas",
-            "ResultPath": "$.taskresult",
             "Next": "ValidaAgendaRegistrada"
         },
         "ValidaAgendaRegistrada": { 

@@ -9,33 +9,24 @@ sfn = boto3.client('stepfunctions', region_name='us-east-1')
 def root_path():
     return("ok")
 
-@server.route("/teste", methods=["POST"])
+@server.route("/teste/prepara-agenda", methods=["POST"])
 def teste():
+    try:
+        event = request.json
 
-    event = request.json.get()
-    print(event)
+        if (True):
+            sucesso = True
+            output = "Prepara Agendas concluído com sucesso"
+            response = sfn.send_task_success(event['taskToken'], output)
+        else:
+            sucesso = False
+            error = "Falso"
+            cause = "Prepara Agendas não foi concluído com sucesso"
+            response = sfn.send_task_failure(event['taskToken'], error, cause)
+    except: 
+        print('error')
 
-    if (True):
-        sucesso = True
-        output = { 
-            "message": "Prepara Agendas concluído com sucesso"
-        }
-        taskToken = ""
-        response = sfn.send_task_success(taskToken, output)
-
-    else:
-        sucesso = False
-        error = "Falso"
-        cause = "Prepara Agendas não foi concluído com sucesso"
-        taskToken = ""
-
-        response = sfn.send_task_failure(taskToken, error, cause)
-
-    mensagem_retorno = {
-        "taskToken": "",
-        "sucesso": sucesso
-    }
-    return json.dumps(mensagem_retorno)
+    return jsonify(taskToken, sucesso)
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():
