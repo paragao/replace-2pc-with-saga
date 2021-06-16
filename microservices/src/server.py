@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import boto3
+import json
 
 server = Flask(__name__)
 sfn = boto3.client('stepfunctions', region_name='us-east-1')
@@ -15,17 +16,17 @@ def teste():
     event = request.json
     print(event['TaskToken'])
     token = event['TaskToken']
-
+    
     if (True):
         sucesso = True
         output = "Prepara Agendas concluído com sucesso"
-        response = sfn.send_task_success(token, output)
+        response = sfn.send_task_success(taskToken=token, output=output)
         return (response)
     else:
         sucesso = False
         error = "Falso"
         cause = "Prepara Agendas não foi concluído com sucesso"
-        response = sfn.send_task_failure(token, error, cause)
+        response = sfn.send_task_failure(taskToken=token, error=error, cause=cause)
         return (response)
 
 

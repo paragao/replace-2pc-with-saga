@@ -188,7 +188,7 @@
                     "TaskToken.$": "$$.Task.Token"
                 }
             },
-            "HeartbeatSeconds": 15,
+            "HeartbeatSeconds": 10,
             "Retry": [
                 { 
                     "ErrorEquals": [ "States.TaskFailed" ],
