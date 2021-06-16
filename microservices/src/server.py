@@ -29,7 +29,7 @@ def teste():
         return (response)
 
 
-@server.route("/teste/efetiva-operacao")
+@server.route("/teste/efetiva-operacao", methods=["POST"])
 def efetiva_operacao():
     return("chamada EFETIVA OPERACAO do microserviço")
 
@@ -37,7 +37,7 @@ def efetiva_operacao():
 def valida_anuencia():
     return("chamada VALIDA ANUENCIA do microserviço")
 
-@server.route("/teste/envia-anuencia")
+@server.route("/teste/envia-anuencia", methods=["POST"])
 def envia_anuencia():
     return("chamada ENVIA ANUENCIA do microserviço")
 

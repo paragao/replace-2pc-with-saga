@@ -43,6 +43,7 @@
                     "Next": "GeraResposta"
                 }
             ],
+            "OutputPath": "$.taskresult.ResponseBody",
             "Default": "GeraResposta"
         },
         "GeraResposta": { 
@@ -53,7 +54,9 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/gera-resposta",
-                "RequestBody": {},
+                "RequestBody": {
+                    "ispb.$": "$.ispb"
+                },
                 "AuthType": "NO_AUTH"
             },
             "Catch": [
@@ -67,16 +70,17 @@
         "BloqueiaEC": { 
             "Type": "Task",
             "Comment": "Bloqueia estabelecimento comercial",
-            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
             "Parameters": {
                 "TableName": "r2c3",
-                "Item": { 
+                "Key": { 
                     "ispb": {
-                        "S": "$.ispb"
-                    },
-                    "BloqueiaEC": {
-                        "S": "$.input.taskresult.ResponseBody.sucessoRegistro"
+                        "S.$": "$.ispb"
                     }
+                },
+                "UpdateExpression": "SET BloqueiaEC = :status",
+                "ExpressionAttributeValues": { 
+                    ":status": { "S.$": "$.sucessoRegistro" }
                 }
             },
             "HeartbeatSeconds": 10,
@@ -188,7 +192,7 @@
                     "TaskToken.$": "$$.Task.Token"
                 }
             },
-            "HeartbeatSeconds": 60,
+            "HeartbeatSeconds": 15,
             "Retry": [
                 { 
                     "ErrorEquals": [ "States.TaskFailed" ],
@@ -217,7 +221,7 @@
                         "S": "012345"
                     },
                     "Agenda": { 
-                        "S.$": "$.taskresult"
+                        "S.$": "$.taskresult.output"
                     }
                 }    
             },
