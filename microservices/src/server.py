@@ -13,10 +13,13 @@ def root_path():
 def teste():
     try:
         event = request.json
-        chaves = event.keys()
+        chaves = []
+        for key in event.keys():
+            chaves.append(key)
+
         items = []
         for item in event: 
-            items.append(event[item])
+            items.append(item)
 
         if (True):
             sucesso = True
