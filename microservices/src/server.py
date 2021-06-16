@@ -29,7 +29,7 @@ def teste():
         sucesso = False
         print('error')
 
-    return jsonify(response, sucesso)
+    return (response)
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():
