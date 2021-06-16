@@ -11,25 +11,23 @@ def root_path():
 
 @server.route("/teste/prepara-agenda", methods=["POST"])
 def teste():
-    try:
-        event = request.json
-        print(event['TaskToken'])
-        token = event['TaskToken']
 
-        if (True):
-            sucesso = True
-            output = "Prepara Agendas concluído com sucesso"
-            response = sfn.send_task_success(token, output)
-        else:
-            sucesso = False
-            error = "Falso"
-            cause = "Prepara Agendas não foi concluído com sucesso"
-            response = sfn.send_task_failure(token, error, cause)
-    except: 
+    event = request.json
+    print(event['TaskToken'])
+    token = event['TaskToken']
+
+    if (True):
+        sucesso = True
+        output = "Prepara Agendas concluído com sucesso"
+        response = sfn.send_task_success(token, output)
+        return (response)
+    else:
         sucesso = False
-        print('error')
+        error = "Falso"
+        cause = "Prepara Agendas não foi concluído com sucesso"
+        response = sfn.send_task_failure(token, error, cause)
+        return (response)
 
-    return (response)
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():
