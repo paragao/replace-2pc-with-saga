@@ -199,7 +199,7 @@
             "Catch": [
                 { 
                     "ErrorEquals": [ "States.ALL" ],
-                    "Next": "Falha"
+                    "Next": "RegistraAgendas"
                 }
             ],
             "ResultPath": "$.taskresult",
