@@ -192,14 +192,15 @@
             "Retry": [
                 { 
                     "ErrorEquals": [ "States.TaskFailed" ],
-                    "MaxAttempts": 3,
+                    "MaxAttempts": 2,
                     "BackoffRate": 1
                 }
             ],
             "Catch": [
                 { 
-                    "ErrorEquals": [ "States.ALL" ],
-                    "Next": "RegistraAgendas"
+                    "ErrorEquals": [ "States.Timeout" ],
+                    "Next": "RegistraAgendas",
+                    "ResultPath": "$.taskresult"
                 }
             ],
             "ResultPath": "$.taskresult",

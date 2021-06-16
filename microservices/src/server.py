@@ -13,29 +13,23 @@ def root_path():
 def teste():
     try:
         event = request.json
-        
-        chaves = []
-        for key in event.keys():
-            chaves.append(key)
-
-        items = []
-        for item in event: 
-            items.append(item)
+        print(event['TaskToken'])
+        token = event['TaskToken']
 
         if (True):
             sucesso = True
             output = "Prepara Agendas concluído com sucesso"
-            response = sfn.send_task_success(event['TaskToken'], output)
+            response = sfn.send_task_success(token, output)
         else:
             sucesso = False
             error = "Falso"
             cause = "Prepara Agendas não foi concluído com sucesso"
-            response = sfn.send_task_failure(event['TaskToken'], error, cause)
+            response = sfn.send_task_failure(token, error, cause)
     except: 
         sucesso = False
         print('error')
 
-    return jsonify(chaves, items, sucesso)
+    return jsonify(response, sucesso)
 
 @server.route("/teste/efetiva-operacao")
 def efetiva_operacao():
