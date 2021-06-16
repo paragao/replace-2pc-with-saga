@@ -19,7 +19,7 @@ def teste():
     
     if (True):
         sucesso = True
-        output = { "output": "Prepara Agendas concluído com sucesso" } 
+        output = json.dumps({ "output": "Prepara Agendas concluído com sucesso" })
         response = sfn.send_task_success(taskToken=token, output=output)
         return (response)
     else:
