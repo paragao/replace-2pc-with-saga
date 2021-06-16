@@ -24,8 +24,8 @@ def teste():
         return (response)
     else:
         sucesso = False
-        error = "Falso"
-        cause = "Prepara Agendas não foi concluído com sucesso"
+        error = { "error": "Falso" } 
+        cause = { "cause": "Prepara Agendas não foi concluído com sucesso" }
         response = sfn.send_task_failure(taskToken=token, error=error, cause=cause)
         return (response)
 
