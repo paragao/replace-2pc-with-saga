@@ -13,6 +13,7 @@ def root_path():
 def teste():
     try:
         event = request.json
+        
         chaves = []
         for key in event.keys():
             chaves.append(key)
@@ -24,12 +25,12 @@ def teste():
         if (True):
             sucesso = True
             output = "Prepara Agendas concluído com sucesso"
-            response = sfn.send_task_success(event['RequestBody']['taskToken'], output)
+            response = sfn.send_task_success(event['TaskToken'], output)
         else:
             sucesso = False
             error = "Falso"
             cause = "Prepara Agendas não foi concluído com sucesso"
-            response = sfn.send_task_failure(event['RequestBody']['taskToken'], error, cause)
+            response = sfn.send_task_failure(event['TaskToken'], error, cause)
     except: 
         sucesso = False
         print('error')
