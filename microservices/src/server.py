@@ -53,7 +53,7 @@ def envia_anuencia():
     message = "chamada ENVIA ANUENCIA do microserviço"
 
     response = ddb.update_item(
-        TableName: 'r2c3',
+        TableName='r2c3',
         Key={
             'ispb': { 
                 'S': ispb
