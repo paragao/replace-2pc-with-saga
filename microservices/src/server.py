@@ -17,10 +17,13 @@ def teste():
     event = request.json
     print(event['TaskToken'])
     token = event['TaskToken']
-    
+    ispb = event['ispb']
+
+    message = '{ "output":  "Prepara agenda para {} concluido com sucesso" }'.format(ispb)
+
     if (True):
         sucesso = True
-        response = sfn.send_task_success(taskToken=token, output='Prepara Agendas concluido com sucesso')
+        response = sfn.send_task_success(taskToken=token, output=message)
         return (response)
     else:
         sucesso = False
