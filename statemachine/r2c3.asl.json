@@ -70,26 +70,19 @@
         "BloqueiaEC": { 
             "Type": "Task",
             "Comment": "Bloqueia estabelecimento comercial",
-            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
             "Parameters": {
                 "TableName": "r2c3",
-                "Key": { 
+                "Item": { 
                     "ispb": {
                         "S.$": "$.ispb"
+                    },
+                    "BloqueiaEC": { 
+                        "S.$": "$.sucessoRegistro"
                     }
-                },
-                "UpdateExpression": "SET BloqueiaEC = :status",
-                "ExpressionAttributeValues": { 
-                    ":status": { "S.$": "$.sucessoRegistro" }
                 }
             },
-            "HeartbeatSeconds": 10,
-            "Catch": [
-                { 
-                    "ErrorEquals": [ "States.ALL" ],
-                    "Next": "Falha"
-                }
-            ],
+            "ResultPath": null,
             "Next": "ValidaRegistroEC"
         },
         "ValidaRegistroEC": { 
@@ -111,9 +104,8 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "GET",
                 "Path": "/teste/valida-anuencia",
-                "RequestBody": {},
-                "QueryParameters": { 
-                    "ispb": ["012345"]
+                "RequestBody": {
+                    "ispb.$": "$.ispb" 
                 },
                 "AuthType": "NO_AUTH"
             },
@@ -133,13 +125,11 @@
                 "ApiEndpoint": "fl5ht11qea.execute-api.us-east-1.amazonaws.com",
                 "Method": "POST",
                 "Path": "/teste/envia-anuencia",
-                "RequestBody": {},
-                "QueryParameters": { 
-                    "anuencia": ["anuencia enviada a base centralizada"]
+                "RequestBody": { 
+                    "ispb.$": "$.ispb" 
                 },
                 "AuthType": "NO_AUTH"
             },
-            "Next": "InsereAnuencias",
             "Retry": [
                 { 
                     "ErrorEquals": [ "States.TaskFailed" ],
@@ -152,19 +142,24 @@
                     "ErrorEquals": [ "States.ALL" ],
                     "Next": "Falha"
                 }
-            ]
+            ],
+            "OutputPath": "$.ispb",
+            "Next": "InsereAnuencias"
         },
         "InsereAnuencias": { 
             "Type": "Task",
             "Comment": "Insere anuencias na base centralizada",
-            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
             "Parameters": {
                 "TableName": "r2c3",
-                "Item": {
+                "Key": {
                     "ispb": { 
-                        "S": "012345"
-                    },
-                    "IdAnuencia": { 
+                        "S.$": "$"
+                    }
+                },
+                "UpdateExpression": "SET Anuencia = :status",
+                "ExpressionAttributeValues": { 
+                    ":status": { 
                         "S": "anuencia inserida"
                     }
                 }
@@ -175,6 +170,7 @@
                     "Next": "Falha"
                 }
             ],
+            "OutputPath": "$.ispb",
             "Next": "PreparaEnviaAgendas"
         },
         "PreparaEnviaAgendas": { 
@@ -213,17 +209,18 @@
         "RegistraAgendas": {
             "Type": "Task",
             "Comment": "Registra agendas  - outras registradoras",
-            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
             "Parameters": {
                 "TableName": "r2c3",
-                "Item": { 
+                "Key": { 
                     "ispb": {
-                        "S": "012345"
-                    },
-                    "Agenda": { 
-                        "S.$": "$.taskresult.output"
+                        "S.$": "$.ispb"
                     }
-                }    
+                },
+                "UpdateExpression": "SET Agendas = :status",
+                "ExpressionAttributeValues": {
+                    ":status": { "S.$": "$.taskresult.output" }
+                }
             },
             "Retry": [
                 { 

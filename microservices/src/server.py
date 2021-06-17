@@ -4,6 +4,7 @@ import json
 
 server = Flask(__name__)
 sfn = boto3.client('stepfunctions', region_name='us-east-1')
+ddb = boto3.client('dynamodb')
 
 #microserviços
 @server.route("/")
@@ -31,15 +32,42 @@ def teste():
 
 @server.route("/teste/efetiva-operacao", methods=["POST"])
 def efetiva_operacao():
+
+
     return("chamada EFETIVA OPERACAO do microserviço")
 
-@server.route("/teste/valida-anuencia")
+@server.route("/teste/valida-anuencia/")
 def valida_anuencia():
-    return("chamada VALIDA ANUENCIA do microserviço")
+
+    event = request.json
+    ispb = event['ispb']
+    message = "chamada VALIDA ANUENCIA do microserviço" 
+
+    return ({ "ispb": ispb, "message": message})
 
 @server.route("/teste/envia-anuencia", methods=["POST"])
 def envia_anuencia():
-    return("chamada ENVIA ANUENCIA do microserviço")
+
+    event = request.json
+    ispb = event['ispb']
+    message = "chamada ENVIA ANUENCIA do microserviço"
+
+    response = ddb.update_item(
+        TableName: 'r2c3',
+        Key={
+            'ispb': { 
+                'S': ispb
+            }
+        },
+        UpdateExpression='SET Anuencia = :status',
+        ExpressionAttributeValues={
+            ':status': { 
+                'S': 'enviada'
+            }
+        }
+    )
+
+    return ({ "ispb": ispb, "message": message})
 
 @server.route('/<task>')
 def worker_task(task):
