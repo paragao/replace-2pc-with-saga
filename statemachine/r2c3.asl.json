@@ -205,7 +205,7 @@
                     "ResultPath": null
                 }
             ],
-            "ResultPath": null,
+            "ResultPath": "$.taskresult",
             "Next": "RegistraAgendas"
         },
         "RegistraAgendas": {
@@ -237,7 +237,7 @@
                     "Next": "Falha"
                 }
             ],
-            "ResultPath": "$.taskresult",
+            "ResultPath": null,
             "Next": "AgendasRegistradas"
         },
         "AgendasRegistradas": { 
@@ -251,13 +251,13 @@
             "Comment": "SLA Atendido?",
             "Choices": [
                 { 
-                    "Variable": "$.taskResult.sucesso",
-                    "IsBoolean": true,
+                    "Variable": "$.taskresult.sucesso",
+                    "StringEquals": "true",
                     "Next": "EfetivaOperacao"
                 },
                 { 
-                    "Variable": "$.taskResult.sucesso",
-                    "IsBoolean": false,
+                    "Variable": "$.taskresult.sucesso",
+                    "StringEquals": "false",
                     "Next": "NotificaCancelamentoOperacao"
                 }
             ]
@@ -273,6 +273,7 @@
                 "RequestBody": {},
                 "AuthType": "NO_AUTH"
             },
+            "ResultPath": null,
             "Next": "DesbloqueiaEC"
         },
         "NotificaCancelamentoOperacao": { 
@@ -366,7 +367,7 @@
                 "TableName": "r2c3",
                 "Key": { 
                     "ispb": { 
-                        "S": "012345"
+                        "S.$": "$.ispb"
                     }
                 },
                 "UpdateExpression": "SET BloqueiaEC = :status",
@@ -387,6 +388,7 @@
                     "Next": "Falha"
                 }
             ],
+            "ResultPath": null,
             "Next": "EstimulaRecalculo"
         },
         "EstimulaRecalculo": {
@@ -394,7 +396,7 @@
             "Comment": "Estimula recalculo",
             "Resource": "arn:aws:states:::sns:publish",
             "Parameters": {
-                "TopicArn": "arn:aws:sns:us-east-1::NotificaOperacoes",
+                "TopicArn": "arn:aws:sns:us-east-1:441224055073:NotificaOperacoes",
                 "Message": "Estimulando recalculo - output de EstimulaRecalculo"
             },
             "Retry": [
@@ -410,6 +412,7 @@
                     "Next": "Falha"
                 }
             ],
+            "ResultPath": null,
             "Next": "GeraResposta"
         },
         "Sucesso": {
