@@ -19,7 +19,7 @@ def teste():
     token = event['TaskToken']
     ispb = event['ispb']
 
-    message = '{ "output":  "Prepara agenda para {} concluido com sucesso" }'.format(ispb)
+    message = '{ "output": "Prepara agenda concluido com sucesso", "sucesso": "true" }'
 
     if (True):
         sucesso = True
