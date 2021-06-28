@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import boto3
-import json
+import time
 
 server = Flask(__name__)
 sfn = boto3.client('stepfunctions', region_name='us-east-1')
@@ -23,6 +23,7 @@ def teste():
 
     if (True):
         sucesso = True
+        time.sleep(10)
         response = sfn.send_task_success(taskToken=token, output=message)
         return (response)
     else:

@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sam-step-functions
+
+  Sample SAM Template for sam-step-functions
+
+  '
+Globals:
+  Function:
+    Timeout: 60
+Resources:
+  ConjuntoRecebiveisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        RegistraContrato:
+          Type: Api
+          Properties:
+            Path: /credenciadora/conjuntos-unidades-recebiveis
+            Method: post
+      ImageUri: conjuntorecebiveisfunction:nodejs10.x-v1
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./conjuntos-unidades-recebiveis
+      Dockerfile: Dockerfile
+  LotesRecebiveisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        EnviaLotes:
+          Type: Api
+          Properties:
+            Path: /credenciadora/conjuntos-unidades-recebiveis/{id_conjunto}/lotes-unidades-recebiveis
+            Method: post
+      ImageUri: lotesrecebiveisfunction:nodejs10.x-v1
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./lotes-unidades-recebiveis
+      Dockerfile: Dockerfile
+  OperacoesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        Operacoes:
+          Type: Api
+          Properties:
+            Path: /credenciadora/operacoes
+            Method: post
+      ImageUri: operacoesfunction:nodejs10.x-v1
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./operacoes
+      Dockerfile: Dockerfile
+  RetornosRegistroOperacaoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        RetornoRegistroOperacao:
+          Type: Api
+          Properties:
+            Path: /credenciadora/retornos-registro-operacao
+            Method: post
+      ImageUri: retornosregistrooperacaofunction:nodejs10.x-v1
+    Metadata:
+      DockerTag: nodejs10.x-v1
+      DockerContext: ./retornos-registro-operacao
+      Dockerfile: Dockerfile
+  R2C3SAGAStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: R2C3-SAGA
+      Type: STANDARD
+      DefinitionUri: ../../statemachine/r2c3.asl.json
+      Logging:
+        LoggingConfiguration:
+          Destinations:
+          - CloudWatchLogsLogGroup: null
+          IncludeExecutionData: true
+          Level: ALL
+      Tracing:
+        Enabled: true
+      Policies:
+      - AmazonDynamoDBFullAccess
+      - AWSLambdaBasicExecutionRole
+      - AmazonS3FullAccess
+      - AmazonECSFullAccess
+  R2C3DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: R2C3-SAGA
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+      - AttributeName: ISPB
+        KeyType: HASH
+      - AttributeName: OPERACAO
+        KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+  AtlanteSAGAStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: Atlante-R2C3-SAGA
+      Type: STANDARD
+      DefinitionUri: ../../statemachine/atlante.asl.json
+      Logging:
+        LoggingConfiguration:
+          Destinations:
+          - CloudWatchLogsLogGroup: null
+          IncludeExecutionData: true
+          Level: ALL
+      Tracing:
+        Enabled: true
+      Policies:
+      - AmazonDynamoDBFullAccess
+      - AWSLambdaBasicExecutionRole
+      - AmazonS3FullAccess
+      - AmazonECSFullAccess
+Outputs:
+  URLdaApi:
+    Description: API Gateway endpoint URL for Prod stage f
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  ConjuntoRecebiveisFunction:
+    Description: ConjuntoRecebiveis Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ConjuntoRecebiveisFunction
+      - Arn
+  LotesRecebiveisFunction:
+    Description: LotesRecebiveis Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - LotesRecebiveisFunction
+      - Arn
+  OperacoesFunction:
+    Description: Operacoes Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - OperacoesFunction
+      - Arn
+  RetornosRegistroOperacaoFunction:
+    Description: RetornosRegistroOperacao Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - OperacoesFunction
+      - Arn

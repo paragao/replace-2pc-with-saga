@@ -1,7 +1,11 @@
-// const axios = require('axios')
-// const url = 'http://checkip.amazonaws.com/';
+// Tracing com AWS X-Ray
+const AWSXRay = require('aws-xray-sdk-core')
+const AWS = AWSXRay.captureAWS(require('aws-sdk'))
 let response;
 
+var serialize = function(object) {
+    return JSON.stringify(object, null, 2)
+}
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -16,12 +20,16 @@ let response;
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        // const ret = await axios(url);
+        
+        events.Records.forEach(record => {
+            console.log(record)
+        })
+
+        // API GW expects lambda to return 200 always even when its an error
         response = {
             'statusCode': 200,
             'body': JSON.stringify({
                 message: 'hello world',
-                // location: ret.data.trim()
             })
         }
     } catch (err) {
