@@ -9,7 +9,7 @@ Globals:
   Function:
     Timeout: 60
 Resources:
-  ConjuntoRecebiveisFunction:
+  ConjuntosRecebiveisFunction:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
@@ -19,7 +19,7 @@ Resources:
           Properties:
             Path: /credenciadora/conjuntos-unidades-recebiveis
             Method: post
-      ImageUri: conjuntorecebiveisfunction:nodejs10.x-v1
+      ImageUri: conjuntosrecebiveisfunction:nodejs10.x-v1
     Metadata:
       DockerTag: nodejs10.x-v1
       DockerContext: ./conjuntos-unidades-recebiveis

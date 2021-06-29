@@ -13,7 +13,7 @@ Globals:
 Resources:
   ## Define a API /credenciadora/conjuntos-unidades-recebiveis
   ## Essa API irá chamar a "aplicação" - uma lambda que irá iniciar a StepFunctionsStateMachine
-  ConjuntoRecebiveisFunction:
+  ConjuntosRecebiveisFunction:
     Type: AWS::Serverless::Function 
     Properties:
       PackageType: Image
