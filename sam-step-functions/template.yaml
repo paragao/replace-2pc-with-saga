@@ -85,7 +85,7 @@ Resources:
       Logging: 
         LoggingConfiguration:
           Destinations: 
-            - CloudWatchLogsLogGroup: 
+            - CloudWatchLogsLogGroup: r2c3-sam-saga
           IncludeExecutionData: true
           Level: ALL
       Tracing: 
@@ -119,7 +119,7 @@ Resources:
       Logging: 
         LoggingConfiguration:
           Destinations: 
-            - CloudWatchLogsLogGroup: 
+            - CloudWatchLogsLogGroup: r2c3-sam-saga
           IncludeExecutionData: true
           Level: ALL
       Tracing: 
@@ -137,9 +137,9 @@ Outputs:
   URLdaApi:
     Description: "API Gateway endpoint URL for Prod stage f"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
-  ConjuntoRecebiveisFunction:
+  ConjuntosRecebiveisFunction:
     Description: "ConjuntoRecebiveis Lambda Function ARN"
-    Value: !GetAtt ConjuntoRecebiveisFunction.Arn
+    Value: !GetAtt ConjuntosRecebiveisFunction.Arn
   LotesRecebiveisFunction:
     Description: "LotesRecebiveis Lambda Function ARN"
     Value: !GetAtt LotesRecebiveisFunction.Arn
