@@ -1,5 +1,5 @@
 { 
-    "Comment": "Maquina de Estado de exemplo do Atlante",
+    "Comment": "Maquina de Estado de exemplo de controle",
     "StartAt": "AtualizaTabela",
     "States": {
         "AtualizaTabela": { 

@@ -1,5 +1,5 @@
 { 
-    "Comment": "State Machine baseado no desenho enviado pelo Kuriki em 09-06-2021",
+    "Comment": "State Machine basica",
     "StartAt": "RegistroOperacao",
     "States": {
         "RegistroOperacao": {
